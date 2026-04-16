@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QLabel" name="label">
+    <property name="geometry">
+     <rect>
+      <x>330</x>
+      <y>10</y>
+      <width>81</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Scheduler</string>
+    </property>
+   </widget>
+   <widget class="QComboBox" name="algorithmBox">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>80</y>
+      <width>141</width>
+      <height>31</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>FCFS</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>SJF non-preemtive</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>SJF preemtive</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Priority non-preemptive</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Priority preemptive</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>Round Robin</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string/>
+     </property>
+    </item>
+   </widget>
+   <widget class="QTableWidget" name="processTable">
+    <property name="geometry">
+     <rect>
+      <x>100</x>
+      <y>180</y>
+      <width>601</width>
+      <height>101</height>
+     </rect>
+    </property>
+    <column>
+     <property name="text">
+      <string>ID </string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Arrival</string>
+     </property>
+    </column>
+    <column>
+     <property name="text">
+      <string>Burst </string>
+     </property>
+    </column>
+   </widget>
+   <widget class="QPushButton" name="startButton">
+    <property name="geometry">
+     <rect>
+      <x>90</x>
+      <y>320</y>
+      <width>90</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>startButton</string>
+    </property>
+   </widget>
+   <widget class="QGraphicsView" name="ganttView">
+    <property name="geometry">
+     <rect>
+      <x>30</x>
+      <y>400</y>
+      <width>731</width>
+      <height>141</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="waitingLabel">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>300</y>
+      <width>171</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Waiting Time:</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="turnaroundLabel">
+    <property name="geometry">
+     <rect>
+      <x>520</x>
+      <y>330</y>
+      <width>141</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Turnaround Time:</string>
+    </property>
+   </widget>
+   <widget class="QLCDNumber" name="lcdNumber">
+    <property name="geometry">
+     <rect>
+      <x>600</x>
+      <y>70</y>
+      <width>91</width>
+      <height>31</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="quantumLabel">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>50</y>
+      <width>63</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Quantum</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="quantumSpinBox">
+    <property name="geometry">
+     <rect>
+      <x>260</x>
+      <y>80</y>
+      <width>91</width>
+      <height>29</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QCheckBox" name="dynamicCheckBox">
+    <property name="geometry">
+     <rect>
+      <x>490</x>
+      <y>80</y>
+      <width>92</width>
+      <height>25</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Dynamic</string>
+    </property>
+   </widget>
+   <widget class="QSpinBox" name="processNumberSpinBox">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>80</y>
+      <width>91</width>
+      <height>29</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_2">
+    <property name="geometry">
+     <rect>
+      <x>370</x>
+      <y>50</y>
+      <width>121</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Number</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="addProcessButton">
+    <property name="geometry">
+     <rect>
+      <x>210</x>
+      <y>320</y>
+      <width>90</width>
+      <height>29</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Add</string>
+    </property>
+   </widget>
+   <zorder>ganttView</zorder>
+   <zorder>label</zorder>
+   <zorder>algorithmBox</zorder>
+   <zorder>processTable</zorder>
+   <zorder>startButton</zorder>
+   <zorder>waitingLabel</zorder>
+   <zorder>turnaroundLabel</zorder>
+   <zorder>lcdNumber</zorder>
+   <zorder>quantumLabel</zorder>
+   <zorder>quantumSpinBox</zorder>
+   <zorder>dynamicCheckBox</zorder>
+   <zorder>processNumberSpinBox</zorder>
+   <zorder>label_2</zorder>
+   <zorder>addProcessButton</zorder>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>25</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
