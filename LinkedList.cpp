@@ -3,6 +3,10 @@ using namespace std;
 
 int universalTime=0;
 int clockCycle =50;
+LinkedList ganttLog;
+Node* currentGanttNode = nullptr;  
+
+
 
 
 
@@ -40,15 +44,6 @@ struct LinkedList {
         return node;
     }
 
-    // ------------------------------------------------------------------
-    // insertAtHead – O(1)
-    // ------------------------------------------------------------------
-    void insertAtHead(double burst, int priority) {
-        Node* node = createNode(burst, priority);
-        node->next = head;
-        head       = node;
-        std::cout << "[INSERT HEAD] Node ID=" << node->id << " added at head.\n";
-    }
 
     // ------------------------------------------------------------------
     // insertAtTail – O(n)
@@ -295,123 +290,104 @@ struct LinkedList {
    
 
 };
+
+
+void logToGantt(int runningID) {
+    if (!currentGanttNode || currentGanttNode->id != runningID) {
+        ganttLog.insertAtTail(0, 0);
+        currentGanttNode          = ganttLog.getLastNode();
+        currentGanttNode->id      = runningID;
+        currentGanttNode->arrival = universalTime;
+        currentGanttNode->burst   = 0;
+    }
+    currentGanttNode->burst += clockCycle;
+}
     // ------------------------------------------------------------------
     // Take step as SJF  takes 0 if premptive, takes 1 if nonpremptive 
     // ------------------------------------------------------------------
 
+
 void SJF(LinkedList* list , bool x){
     
-    if(!list->head) return;         //chech if the list is empty
+   if (!list->head) return;
 
-    if(!x){       // if premptive
-            
-        list->sortByTime();                      // sort first
-
-    }else{       // if nonpremtive
-
-        if(!list->head->currentlyWorking){      // if in the last tick we were not working on it,
-                                                // this means it is a new proccess, we must sort first
-            list->sortByTime();                  
-            list->head->currentlyWorking = 1;   // set it currently working so in the next step we dont sort                                                                          
-        }              
-       
+    if (!x) {
+        list->sortByTime();
+    } else {
+        if (!list->head->currentlyWorking) {
+            list->sortByTime();
+            list->head->currentlyWorking = 1;
+        }
     }
-    list->head->burst-= clockCycle; // minus 50ms from the proccess life
-    if (list->head->burst <= 0)     //check if the proccess is finished
-        list->deleteByID(list->head->id);   // if soo then delete the current proccess 
+
+    logToGantt(list->head->id);
+
+    list->head->burst -= clockCycle;
+    if (list->head->burst <= 0)
+        list->deleteByID(list->head->id);
 }
 
 
 int quantumTime;
 void roundRobin(LinkedList* list , int qTime){
 
-     if(!list->head) return;         //chech if the list is empty
+   if (!list->head) return;
 
-    list->head->burst-= clockCycle;
-    quantumTime-= clockCycle;
+    logToGantt(list->head->id);
 
-    if(quantumTime<=0){
-        if (list->head->burst <= 0){     //check if the proccess is finished
-            list->deleteByID(list->head->id);   // if soo then delete the current procces
-        }else{                                  // if the proccess still needs to run then put it at the end
-            
-            Node* ptr = list->getLastNode();
-            ptr->next = list->head;
-            list->head=list->head->next;
+    list->head->burst -= clockCycle;
+    quantumTime       -= clockCycle;
+
+    if (quantumTime <= 0) {
+        if (list->head->burst <= 0) {
+            list->deleteByID(list->head->id);
+        } else {
+            Node* ptr  = list->getLastNode();
+            ptr->next  = list->head;
+            list->head = list->head->next;
             ptr->next->next = nullptr;
         }
-        quantumTime=qTime;
-
+        quantumTime = qTime;
     }
-
 }
 
 
 void Priority(LinkedList* list, bool x)
 {
+   if (!list->head) return;
 
-    if(!list->head) return;         //chech if the list is empty
-
-    if(!x)        // if premptive
-    {
-
-        list->sortByPriority();                      // sort first
-
-    }
-    else         // if nonpremtive
-    {
-
-        if(!list->head->currentlyWorking)       // if in the last tick we were not working on it,
-        {
-            // this means it is a new proccess, we must sort first
+    if (!x) {
+        list->sortByPriority();
+    } else {
+        if (!list->head->currentlyWorking) {
             list->sortByPriority();
-            list->head->currentlyWorking = 1;   // set it currently working so in the next step we dont sort
+            list->head->currentlyWorking = 1;
         }
-
     }
-    list->head->burst-= clockCycle; // minus 50ms from the proccess life
 
-    std::cout << "[PRIORITY] Running ID=" << list->head->id
-              << " | remaining time=" << list->head->burst
-              << " | priority=" << list->head->priority << "\n";
+    logToGantt(list->head->id);
 
-
-    if (list->head->burst <= 0){   //check if the proccess is finished
-        std::cout << "[PRIORITY] Finished ID=" << list->head->id << "\n";
-        list->deleteByID(list->head->id);   // if soo then delete the current proccess
-    }
+    list->head->burst -= clockCycle;
+    if (list->head->burst <= 0)
+        list->deleteByID(list->head->id);
 }
 
 void FCFS(LinkedList* list)
 {
-    if (!list->head) return;  // safety check
+       if (!list->head) return;
 
-    // If this is a new process starting execution
-    if (!list->head->currentlyWorking)
-    {
+    if (!list->head->currentlyWorking) {
         list->head->currentlyWorking = 1;
-        std::cout << "[FCFS] Starting process ID=" << list->head->id << "\n";
     }
 
-    // Execute current process
+    logToGantt(list->head->id);
+
     list->head->burst -= clockCycle;
-
-    std::cout << "[FCFS] Running process ID=" << list->head->id
-              << " remaining time=" << list->head->burst << "\n";
-
-    // If finished → remove and move to next
-    if (list->head->burst <= 0)
-    {
+    if (list->head->burst <= 0) {
         int finishedID = list->head->id;
         list->deleteByID(finishedID);
-
         if (list->head)
-        {
-            // Next process becomes active
             list->head->currentlyWorking = 0;
-        }
-
-        std::cout << "[FCFS] Process ID=" << finishedID << " finished\n";
     }
 }
 
@@ -444,127 +420,4 @@ void step(LinkedList* list , int x , int quantumTime){
     if(x == 5);roundRobin(list , quantumTime);
      universalTime+= clockCycle;
 
-}
-// ─────────────────────────────────────────────
-//  main – demonstrates all operations
-// ─────────────────────────────────────────────
-int main() {
- // ─────────────────────────────────────────────
-    // TEST 1: SJF Preemptive – shortest job finishes in one tick
-    // ─────────────────────────────────────────────
-    cout << "=== TEST 1: SJF Preemptive _ shortest finishes in one tick ===\n";
-    {
-        LinkedList queue;
-        queue.insertAtTail(100.0, 1);
-        queue.insertAtTail(30.0,  4);  // shortest, 30 < 50 -> deleted after tick
-        queue.insertAtTail(200.0, 3);
-
-        queue.sortByPriority();
-
-        cout << "GUI init:     "; queue.print();
-        step(&queue, 2); cout << "After tick 1: "; queue.print();
-        // Expected: 30.0 deleted, head is now 100.0
-    }
-
-    // ─────────────────────────────────────────────
-    // TEST 2: SJF Preemptive – job survives multiple ticks
-    // ─────────────────────────────────────────────
-    cout << "\n=== TEST 2: SJF Preemptive _ job takes multiple ticks ===\n";
-    {
-        LinkedList queue;
-        queue.insertAtTail(200.0, 1);
-        queue.insertAtTail(130.0, 2);  // shortest, needs 3 ticks to finish
-
-        cout << "GUI init:     "; queue.print();
-        step(&queue, 2); cout << "After tick 1: "; queue.print();  // 130 -> 80
-        step(&queue, 2); cout << "After tick 2: "; queue.print();  // 80  -> 30
-        step(&queue, 2); cout << "After tick 3: "; queue.print();  // 30  -> deleted
-        // Expected: 130 gone after tick 3, 200 becomes head
-    }
-
-    // ─────────────────────────────────────────────
-    // TEST 3: SJF Preemptive – new shorter job arrives mid-execution
-    // ─────────────────────────────────────────────
-    cout << "\n=== TEST 3: SJF Preemptive _ preemption on new arrival ===\n";
-    {
-        LinkedList queue;
-        queue.insertAtTail(150.0, 1);
-
-        cout << "GUI init:      "; queue.print();
-        step(&queue, 2); cout << "After tick 1:  "; queue.print();  // 150 -> 100
-
-        queue.insertAtTail(60.0, 2);  // GUI: user submits shorter process
-        cout << "New job added: "; queue.print();
-
-        step(&queue, 2); cout << "After tick 2:  "; queue.print();  // preempts, 60 -> 10
-        step(&queue, 2); cout << "After tick 3:  "; queue.print();  // 10 deleted, 100 resumes
-        // Expected: 60.0 finishes before 100.0 continues
-    }
-
-    // ─────────────────────────────────────────────
-    // TEST 4: SJF Non-Preemptive – running job is not interrupted
-    // ─────────────────────────────────────────────
-    cout << "\n=== TEST 4: SJF Non-Preemptive _ no interruption mid-job ===\n";
-    {
-        LinkedList queue;
-        queue.insertAtTail(150.0, 1);
-        queue.insertAtTail(200.0, 2);
-
-        cout << "GUI init:      "; queue.print();
-        step(&queue, 1); cout << "After tick 1:  "; queue.print();  // picks 150, marks working
-
-        queue.insertAtTail(20.0, 3);  // GUI: shorter job arrives mid-execution
-        cout << "New job added: "; queue.print();
-
-        step(&queue, 1); cout << "After tick 2:  "; queue.print();  // should NOT switch to 20.0
-        step(&queue, 1); cout << "After tick 3:  "; queue.print();  // still running 150
-        // Expected: 20.0 waits, 150 keeps running
-    }
-
-    // ─────────────────────────────────────────────
-    // TEST 5: SJF Non-Preemptive – after job finishes picks next shortest
-    // ─────────────────────────────────────────────
-    cout << "\n=== TEST 5: SJF Non-Preemptive _ next shortest picked after finish ===\n";
-    {
-        LinkedList queue;
-        queue.insertAtTail(40.0, 1);  // finishes in 1 tick
-        queue.insertAtTail(90.0, 2);
-        queue.insertAtTail(60.0, 3);
-
-        cout << "GUI init:     "; queue.print();
-        step(&queue, 1); cout << "After tick 1: "; queue.print();  // 40 deleted
-        step(&queue, 1); cout << "After tick 2: "; queue.print();  // picks 60, marks working
-        step(&queue, 1); cout << "After tick 3: "; queue.print();  // 60 -> 10
-        step(&queue, 1); cout << "After tick 4: "; queue.print();  // 10 deleted, picks 90
-        // Expected: execution order 40 -> 60 -> 90
-    }
-
-    // ─────────────────────────────────────────────
-    // TEST 6: Edge – GUI keeps ticking on empty queue
-    // ─────────────────────────────────────────────
-    cout << "\n=== TEST 6: Empty queue _ GUI keeps ticking safely ===\n";
-    {
-        LinkedList queue;
-        cout << "GUI init:     "; queue.print();
-        step(&queue, 2); cout << "After tick 1: "; queue.print();
-        step(&queue, 2); cout << "After tick 2: "; queue.print();
-        // Expected: no crash, list stays empty
-    }
-
-    // ─────────────────────────────────────────────
-    // TEST 7: Edge – single node drains completely
-    // ─────────────────────────────────────────────
-    cout << "\n=== TEST 7: Single node drains to empty ===\n";
-    {
-        LinkedList queue;
-        queue.insertAtTail(120.0, 1);
-
-        cout << "GUI init:     "; queue.print();
-        step(&queue, 2); cout << "After tick 1: "; queue.print();  // 120 -> 70
-        step(&queue, 2); cout << "After tick 2: "; queue.print();  // 70  -> 20
-        step(&queue, 2); cout << "After tick 3: "; queue.print();  // 20  -> deleted
-        step(&queue, 2); cout << "After tick 4: "; queue.print();  // empty, safe tick
-    }
-
-    return 0;
 }
