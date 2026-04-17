@@ -125,7 +125,7 @@ void MainWindow::on_addProcessButton_clicked()
 void MainWindow::on_startButton_clicked()
 {
     // 🔥 update quantum
-    quantumTime = ui->quantumSpinBox->value()*1000;
+    quantumTime =  ui->quantumSpinBox->value()*1000;
     ganttLog.clear();
     currentGanttNode = nullptr;
     universalTime = 0;
@@ -217,9 +217,13 @@ void MainWindow::updateTimer()
 
 
     // 🔥 RUN scheduler
-    step(&mohsen, algorithmType);
+    if(algorithmType==5)
+        step(&mohsen , algorithmType ,ui->quantumSpinBox->value()*1000 );
+    else
+        step(&mohsen, algorithmType);
+
 
     // 🔥 redraw
     drawGantt();
-    cout<<quantumTime;
+    cout<<universalTime<<":"<<seconds<<endl;
 }

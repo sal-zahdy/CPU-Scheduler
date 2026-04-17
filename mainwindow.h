@@ -9,7 +9,7 @@
 extern LinkedList ganttLog;
 extern Node* currentGanttNode;
 extern double universalTime;
-extern double quantumTime;
+extern int quantumTime;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }

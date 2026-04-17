@@ -1,9 +1,7 @@
 #ifndef LINKEDLIST_H
 #define LINKEDLIST_H
 
-extern double universalTime;
-extern double clockCycle;
-extern double quantumTime;
+
 
 struct Node {
     int  id;

@@ -5,7 +5,7 @@ using namespace std;
 
 double universalTime = 0;
 double clockCycle    = 0.05;
-double quantumTime   = 0.0;
+int quantumTime   = 0;
 
 LinkedList ganttLog;
 Node*      currentGanttNode = nullptr;
@@ -189,16 +189,17 @@ void SJF(LinkedList* list, bool x) {
     if (list->head->burst <= clockCycle * 0.5) list->deleteByID(list->head->id);
 }
 
+
 // linkedlist.cpp — replace your roundRobin with this:
-void roundRobin(LinkedList* list, double qTime) {
+void roundRobin(LinkedList* list, int qTime) {
     if (!list->head) return;
 
     logToGantt(list->head->id);
     list->head->burst -= clockCycle;
-    quantumTime       -= 1.0;   // decrement by 1 tick, not by clockCycle
+    quantumTime       -= 50;   // decrement by 1 tick, not by clockCycle
 
     bool burstDone   = list->head->burst  <= clockCycle * 0.5;
-    bool quantumDone = quantumTime        <= 0.5;
+    bool quantumDone = quantumTime        <= 0;
 
     if (burstDone) {
         list->deleteByID(list->head->id);
@@ -242,10 +243,11 @@ void FCFS(LinkedList* list) {
     }
 }
 
-void step(LinkedList* list , int x , double quantumTime){
+void step(LinkedList* list , int x , int quantumTime){
 
     if(x == 5) roundRobin(list , quantumTime);
     universalTime+= clockCycle;
+    return;
 
 }
 
@@ -256,7 +258,7 @@ void step(LinkedList* list, int x)
     if (x == 2) SJF(list, 0);
     if (x == 3) Priority(list, 1);
     if (x == 4) Priority(list, 0);
-    if (x == 5) roundRobin(list, quantumTime);
 
     universalTime += clockCycle;
+    return;
 }
