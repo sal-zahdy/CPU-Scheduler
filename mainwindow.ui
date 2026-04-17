@@ -30,9 +30,9 @@
    <widget class="QComboBox" name="algorithmBox">
     <property name="geometry">
      <rect>
-      <x>100</x>
+      <x>60</x>
       <y>80</y>
-      <width>141</width>
+      <width>181</width>
       <height>31</height>
      </rect>
     </property>
@@ -75,10 +75,10 @@
    <widget class="QTableWidget" name="processTable">
     <property name="geometry">
      <rect>
-      <x>100</x>
-      <y>180</y>
-      <width>601</width>
-      <height>101</height>
+      <x>140</x>
+      <y>130</y>
+      <width>511</width>
+      <height>181</height>
      </rect>
     </property>
     <column>
@@ -100,8 +100,8 @@
    <widget class="QPushButton" name="startButton">
     <property name="geometry">
      <rect>
-      <x>90</x>
-      <y>320</y>
+      <x>70</x>
+      <y>350</y>
       <width>90</width>
       <height>29</height>
      </rect>
@@ -124,7 +124,7 @@
     <property name="geometry">
      <rect>
       <x>520</x>
-      <y>300</y>
+      <y>330</y>
       <width>171</width>
       <height>20</height>
      </rect>
@@ -137,7 +137,7 @@
     <property name="geometry">
      <rect>
       <x>520</x>
-      <y>330</y>
+      <y>360</y>
       <width>141</width>
       <height>20</height>
      </rect>
@@ -149,8 +149,8 @@
    <widget class="QLCDNumber" name="lcdNumber">
     <property name="geometry">
      <rect>
-      <x>600</x>
-      <y>70</y>
+      <x>660</x>
+      <y>80</y>
       <width>91</width>
       <height>31</height>
      </rect>
@@ -182,7 +182,7 @@
    <widget class="QCheckBox" name="dynamicCheckBox">
     <property name="geometry">
      <rect>
-      <x>490</x>
+      <x>510</x>
       <y>80</y>
       <width>92</width>
       <height>25</height>
@@ -218,8 +218,8 @@
    <widget class="QPushButton" name="addProcessButton">
     <property name="geometry">
      <rect>
-      <x>210</x>
-      <y>320</y>
+      <x>190</x>
+      <y>350</y>
       <width>90</width>
       <height>29</height>
      </rect>

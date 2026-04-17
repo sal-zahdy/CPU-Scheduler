@@ -1,16 +1,15 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "LinkedList.h"
+
 #include <QMainWindow>
 #include <QTimer>
-#include <list>
 
-struct Process {
-    int id;
-    int arrival;
-    int burst;
-    int priority;
-};
+extern LinkedList ganttLog;
+extern Node* currentGanttNode;
+extern double universalTime;
+extern double quantumTime;
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
@@ -23,7 +22,7 @@ private:
     bool isDynamic = false;
     int quantum = 0;
 
-    std::list<Process> processList;
+
 
     Q_OBJECT
 
@@ -40,7 +39,7 @@ private:
 
 private:
     QTimer *timer;
-    int seconds = 0;
+    double seconds = 0;
 
 private slots:
     void updateTimer();
@@ -49,6 +48,7 @@ private slots:
     void on_addProcessButton_clicked();
     void drawGantt();
     void on_processNumberSpinBox_valueChanged(int value);
+
 
 
 };

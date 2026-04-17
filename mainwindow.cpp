@@ -5,7 +5,12 @@
 #include <QGraphicsTextItem>
 #include <QTimer>
 #include <QMessageBox>
-#include <list>
+
+#include <iostream>
+using namespace std;
+
+// 🔥 MAIN LINKED LIST
+LinkedList mohsen;
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -19,7 +24,6 @@ MainWindow::MainWindow(QWidget *parent)
     ui->quantumLabel->setVisible(false);
     ui->quantumSpinBox->setVisible(false);
 
-    // initial rows
     ui->processTable->setRowCount(2);
 }
 
@@ -52,12 +56,10 @@ void MainWindow::on_algorithmBox_currentIndexChanged(int index)
 // 🔴 SpinBox controls rows
 void MainWindow::on_processNumberSpinBox_valueChanged(int value)
 {
-    if (!isDynamic) {
+    if (!isDynamic)
         ui->processTable->setRowCount(value);
-    } else {
-        // dynamic → extra row for new process
+    else
         ui->processTable->setRowCount(value + 1);
-    }
 }
 
 // 🔴 Dynamic checkbox
@@ -67,14 +69,13 @@ void MainWindow::on_dynamicCheckBox_toggled(bool checked)
 
     int n = ui->processNumberSpinBox->value();
 
-    if (!isDynamic) {
+    if (!isDynamic)
         ui->processTable->setRowCount(n);
-    } else {
-        ui->processTable->setRowCount(n + 1); // extra input row
-    }
+    else
+        ui->processTable->setRowCount(n + 1);
 }
 
-// 🔴 Add button → ADD to LINKED LIST + redraw
+// 🔴 ADD PROCESS (Dynamic)
 void MainWindow::on_addProcessButton_clicked()
 {
     if (!isDynamic) {
@@ -93,53 +94,49 @@ void MainWindow::on_addProcessButton_clicked()
         return;
     }
 
-    Process p;
-    p.id = processList.size() + 1;
-    p.arrival = arrivalItem->text().toInt();
-    p.burst   = burstItem->text().toInt();
-    p.priority = 0;
+    int arrival = arrivalItem->text().toInt();
+    int burst   = burstItem->text().toInt();
+    int priority = 0;
 
-    // Priority
     if (algorithmType == 3 || algorithmType == 4) {
         QTableWidgetItem *priorityItem =
             ui->processTable->item(lastRow, 3);
 
         if (priorityItem)
-            p.priority = priorityItem->text().toInt();
+            priority = priorityItem->text().toInt();
     }
 
-    // ✅ CORRECT VALIDATION
-    if (p.arrival > seconds) {
+    if (arrival > seconds) {
         QMessageBox::warning(this, "Error",
-                             "Arrival time cannot be greater than current time!");
+                             "Arrival > current time!");
         return;
     }
 
-    // 🔥 ADD to linked list
-    processList.push_back(p);
+    // 🔥 INSERT INTO LINKED LIST
+    mohsen.insertAtTail(burst, priority, arrival);
 
-    // 🔥 SORT again
-    processList.sort([](const Process &a, const Process &b) {
-        return a.arrival < b.arrival;
-    });
+    mohsen.print(); // debug
 
-    // 🔥 ADD NEW EMPTY ROW for next process
+    // add new empty row
     ui->processTable->insertRow(ui->processTable->rowCount());
-
-    // 🔥 UPDATE GANTT immediately
-    drawGantt();
 }
 
-// 🔴 Start button
+// 🔴 START BUTTON
 void MainWindow::on_startButton_clicked()
 {
+    // 🔥 update quantum
+    quantumTime = ui->quantumSpinBox->value()*1000;
+    ganttLog.clear();
+    currentGanttNode = nullptr;
+    universalTime = 0;
+
     seconds = 0;
     ui->lcdNumber->display("00:00:00");
 
     if (!timer->isActive())
-        timer->start(1000);
+        timer->start(50);
 
-    processList.clear();
+    mohsen.clear();
 
     int rows = ui->processTable->rowCount();
 
@@ -151,68 +148,64 @@ void MainWindow::on_startButton_clicked()
         if (!arrivalItem || !burstItem)
             continue;
 
-        Process p;
-        p.id = i + 1;
-        p.arrival = arrivalItem->text().toInt();
-        p.burst   = burstItem->text().toInt();
-        p.priority = 0;
+        int arrival = arrivalItem->text().toInt();
+        int burst   = burstItem->text().toInt();
+        int priority = 0;
 
         if (algorithmType == 3 || algorithmType == 4) {
             QTableWidgetItem *priorityItem =
                 ui->processTable->item(i, 3);
 
             if (priorityItem)
-                p.priority = priorityItem->text().toInt();
+                priority = priorityItem->text().toInt();
         }
 
-        processList.push_back(p);
+        mohsen.insertAtTail(burst, priority, arrival);
     }
 
-    processList.sort([](const Process &a, const Process &b) {
-        return a.arrival < b.arrival;
-    });
+    mohsen.print(); // debug
 
     drawGantt();
 }
 
-// 🔴 Gantt drawing (separated for reuse)
+// 🔴 DRAW GANTT (FROM ganttLog)
 void MainWindow::drawGantt()
 {
-    QGraphicsScene *scene = new QGraphicsScene(this);
-    ui->ganttView->setScene(scene);
+    // Don't create a new scene every tick — reuse or clear
+    QGraphicsScene *scene = ui->ganttView->scene();
+    if (!scene) {
+        scene = new QGraphicsScene(this);
+        ui->ganttView->setScene(scene);
+    }
+    scene->clear();
 
-    int x = 0;
-    int scale = 40;
-    int currentTime = 0;
+    int x     = 0;
+    int scale = 40;   // pixels per second of real time
 
-    scene->addText("0")->setPos(0, 60);
-
-    for (auto p : processList) {
-
-        int width = p.burst * scale;
+    Node* cur = ganttLog.head;
+    while (cur) {
+        int width = (int)(cur->burst * scale);
+        if (width < 1) width = 1;
 
         scene->addRect(x, 0, width, 50);
-
-        scene->addText("P" + QString::number(p.id))
+        scene->addText("P" + QString::number(cur->id))
             ->setPos(x + width / 3, 10);
-
-        currentTime += p.burst;
-
-        scene->addText(QString::number(currentTime))
-            ->setPos(x + width, 60);
+        scene->addText(QString::number(cur->arrival))   // shows decimal
+            ->setPos(x, 60);
 
         x += width;
+        cur = cur->next;
     }
 }
 
-// 🔴 Timer
+// 🔴 TIMER (CORE ENGINE 🔥)
 void MainWindow::updateTimer()
 {
-    seconds++;
+    seconds += 0.05; // 50 ms
 
     int hrs = seconds / 3600;
-    int mins = (seconds % 3600) / 60;
-    int secs = seconds % 60;
+    int mins = ((int)seconds % 3600) / 60;
+    int secs = (int)seconds % 60;
 
     QString timeStr = QString("%1:%2:%3")
                           .arg(hrs, 2, 10, QChar('0'))
@@ -220,4 +213,13 @@ void MainWindow::updateTimer()
                           .arg(secs, 2, 10, QChar('0'));
 
     ui->lcdNumber->display(timeStr);
+
+
+
+    // 🔥 RUN scheduler
+    step(&mohsen, algorithmType);
+
+    // 🔥 redraw
+    drawGantt();
+    cout<<quantumTime;
 }
