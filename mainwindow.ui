@@ -228,6 +228,19 @@
      <string>Add</string>
     </property>
    </widget>
+   <widget class="QPushButton" name="pauseButton">
+    <property name="geometry">
+     <rect>
+      <x>670</x>
+      <y>130</y>
+      <width>80</width>
+      <height>24</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Pause</string>
+    </property>
+   </widget>
    <zorder>ganttView</zorder>
    <zorder>label</zorder>
    <zorder>algorithmBox</zorder>
@@ -242,6 +255,7 @@
    <zorder>processNumberSpinBox</zorder>
    <zorder>label_2</zorder>
    <zorder>addProcessButton</zorder>
+   <zorder>pauseButton</zorder>
   </widget>
   <widget class="QMenuBar" name="menubar">
    <property name="geometry">
@@ -249,7 +263,7 @@
      <x>0</x>
      <y>0</y>
      <width>800</width>
-     <height>25</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

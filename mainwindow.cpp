@@ -9,7 +9,6 @@
 #include <iostream>
 using namespace std;
 
-// 🔥 MAIN LINKED LIST
 LinkedList mohsen;
 
 MainWindow::MainWindow(QWidget *parent)
@@ -32,7 +31,6 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-// 🔴 Algorithm selection
 void MainWindow::on_algorithmBox_currentIndexChanged(int index)
 {
     algorithmType = index;
@@ -53,7 +51,6 @@ void MainWindow::on_algorithmBox_currentIndexChanged(int index)
     ui->quantumSpinBox->setVisible(index == 5);
 }
 
-// 🔴 SpinBox controls rows
 void MainWindow::on_processNumberSpinBox_valueChanged(int value)
 {
     if (!isDynamic)
@@ -62,25 +59,20 @@ void MainWindow::on_processNumberSpinBox_valueChanged(int value)
         ui->processTable->setRowCount(value + 1);
 }
 
-// 🔴 Dynamic checkbox
 void MainWindow::on_dynamicCheckBox_toggled(bool checked)
 {
     isDynamic = checked;
-
     int n = ui->processNumberSpinBox->value();
-
     if (!isDynamic)
         ui->processTable->setRowCount(n);
     else
         ui->processTable->setRowCount(n + 1);
 }
 
-// 🔴 ADD PROCESS (Dynamic)
 void MainWindow::on_addProcessButton_clicked()
 {
     if (!isDynamic) {
-        QMessageBox::warning(this, "Error",
-                             "Enable dynamic mode first!");
+        QMessageBox::warning(this, "Error", "Enable dynamic mode first!");
         return;
     }
 
@@ -94,51 +86,53 @@ void MainWindow::on_addProcessButton_clicked()
         return;
     }
 
-    int arrival = arrivalItem->text().toInt();
-    int burst   = burstItem->text().toInt();
-    int priority = 0;
+    double burst    = burstItem->text().toDouble();
+    int    priority = 0;
 
     if (algorithmType == 3 || algorithmType == 4) {
-        QTableWidgetItem *priorityItem =
-            ui->processTable->item(lastRow, 3);
-
+        QTableWidgetItem *priorityItem = ui->processTable->item(lastRow, 3);
         if (priorityItem)
             priority = priorityItem->text().toInt();
     }
 
-    if (arrival > seconds) {
-        QMessageBox::warning(this, "Error",
-                             "Arrival > current time!");
-        return;
-    }
+    waitingPool.insertAtTail(burst, priority, universalTime);
 
-    // 🔥 INSERT INTO LINKED LIST
-    mohsen.insertAtTail(burst, priority, arrival);
-
-    mohsen.print(); // debug
-
-    // add new empty row
     ui->processTable->insertRow(ui->processTable->rowCount());
+
+    cout << "[DYNAMIC ADD] burst=" << burst
+         << " arrival=" << universalTime
+         << " priority=" << priority << endl;
+
+    waitingPool.print();
 }
 
-// 🔴 START BUTTON
 void MainWindow::on_startButton_clicked()
 {
-    // 🔥 update quantum
-    quantumTime =  ui->quantumSpinBox->value()*1000;
+    quantumTime      = (int)(ui->quantumSpinBox->value() / 0.05);
+    universalTime    = 0;
+    totalTurnaround  = 0;
+    totalWaiting     = 0;
+    finishedCount    = 0;
     ganttLog.clear();
+    waitingPool.clear();
     currentGanttNode = nullptr;
-    universalTime = 0;
+    mohsen.clear();
+
+    isPaused = false;
+    ui->pauseButton->setText("Pause");
 
     seconds = 0;
     ui->lcdNumber->display("00:00:00");
+    ui->turnaroundLabel->setText("Turnaround Time: -");
+    ui->waitingLabel->setText("Waiting Time: -");
 
-    if (!timer->isActive())
-        timer->start(50);
+    if (timer->isActive())
+        timer->stop();
 
-    mohsen.clear();
+    timer->start(50);
 
     int rows = ui->processTable->rowCount();
+    int pid  = 1;
 
     for (int i = 0; i < rows; i++) {
 
@@ -148,30 +142,30 @@ void MainWindow::on_startButton_clicked()
         if (!arrivalItem || !burstItem)
             continue;
 
-        int arrival = arrivalItem->text().toInt();
-        int burst   = burstItem->text().toInt();
-        int priority = 0;
+        double arrival  = arrivalItem->text().toDouble();
+        double burst    = burstItem->text().toDouble();
+        int    priority = 0;
 
         if (algorithmType == 3 || algorithmType == 4) {
-            QTableWidgetItem *priorityItem =
-                ui->processTable->item(i, 3);
-
+            QTableWidgetItem *priorityItem = ui->processTable->item(i, 3);
             if (priorityItem)
                 priority = priorityItem->text().toInt();
         }
 
-        mohsen.insertAtTail(burst, priority, arrival);
+        waitingPool.insertAtTail(burst, priority, arrival);
+
+        cout << "Added to pool: P" << pid++
+             << " arrival=" << arrival
+             << " burst="   << burst
+             << " pri="     << priority << endl;
     }
 
-    mohsen.print(); // debug
-
+    waitingPool.print();
     drawGantt();
 }
 
-// 🔴 DRAW GANTT (FROM ganttLog)
 void MainWindow::drawGantt()
 {
-    // Don't create a new scene every tick — reuse or clear
     QGraphicsScene *scene = ui->ganttView->scene();
     if (!scene) {
         scene = new QGraphicsScene(this);
@@ -180,7 +174,7 @@ void MainWindow::drawGantt()
     scene->clear();
 
     int x     = 0;
-    int scale = 40;   // pixels per second of real time
+    int scale = 40;
 
     Node* cur = ganttLog.head;
     while (cur) {
@@ -190,40 +184,56 @@ void MainWindow::drawGantt()
         scene->addRect(x, 0, width, 50);
         scene->addText("P" + QString::number(cur->id))
             ->setPos(x + width / 3, 10);
-        scene->addText(QString::number(cur->arrival))   // shows decimal
+        scene->addText(QString::number(cur->arrival, 'f', 1))
             ->setPos(x, 60);
 
         x += width;
         cur = cur->next;
     }
+
+    if (finishedCount > 0) {
+        double avgTurnaround = totalTurnaround / finishedCount;
+        double avgWaiting    = totalWaiting    / finishedCount;
+
+        ui->turnaroundLabel->setText(
+            "Turnaround Time: " + QString::number(avgTurnaround, 'f', 2));
+        ui->waitingLabel->setText(
+            "Waiting Time: " + QString::number(avgWaiting, 'f', 2));
+    }
 }
 
-// 🔴 TIMER (CORE ENGINE 🔥)
 void MainWindow::updateTimer()
 {
-    seconds += 0.05; // 50 ms
+    seconds += 0.05;
 
-    int hrs = seconds / 3600;
+    int hrs  =  seconds / 3600;
     int mins = ((int)seconds % 3600) / 60;
-    int secs = (int)seconds % 60;
+    int secs =  (int)seconds % 60;
 
     QString timeStr = QString("%1:%2:%3")
-                          .arg(hrs, 2, 10, QChar('0'))
+                          .arg(hrs,  2, 10, QChar('0'))
                           .arg(mins, 2, 10, QChar('0'))
                           .arg(secs, 2, 10, QChar('0'));
 
     ui->lcdNumber->display(timeStr);
 
-
-
-    // 🔥 RUN scheduler
-    if(algorithmType==5)
-        step(&mohsen , algorithmType ,ui->quantumSpinBox->value()*1000 );
+    if (algorithmType == 5)
+        step(&mohsen, algorithmType, ui->quantumSpinBox->value());
     else
         step(&mohsen, algorithmType);
 
-
-    // 🔥 redraw
     drawGantt();
-    cout<<universalTime<<":"<<seconds<<endl;
+}
+
+void MainWindow::on_pauseButton_clicked()
+{
+    if (isPaused) {
+        timer->start(50);
+        isPaused = false;
+        ui->pauseButton->setText("Pause");
+    } else {
+        timer->stop();
+        isPaused = true;
+        ui->pauseButton->setText("Resume");
+    }
 }

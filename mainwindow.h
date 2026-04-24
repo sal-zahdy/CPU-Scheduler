@@ -11,6 +11,7 @@ extern Node* currentGanttNode;
 extern double universalTime;
 extern int quantumTime;
 
+
 QT_BEGIN_NAMESPACE
 namespace Ui { class MainWindow; }
 QT_END_NAMESPACE
@@ -21,6 +22,7 @@ private:
     int algorithmType = 0; // x variable
     bool isDynamic = false;
     int quantum = 0;
+    bool isPaused = false;
 
 
 
@@ -48,6 +50,7 @@ private slots:
     void on_addProcessButton_clicked();
     void drawGantt();
     void on_processNumberSpinBox_valueChanged(int value);
+    void on_pauseButton_clicked();
 
 
 
